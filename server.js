@@ -13,16 +13,22 @@ var employees = [
 app.get('/', function(req, res){
 	//res.type('text/plain');
 	//res.send('There is nothing here!');
-	res.send(404, 'File not found')
 	//res.redirect('/employees');
+	console.log(req.header('Accept'));
+	console.log(req.header('Content-Type'));
+	//in response set Content-Type
+	res.type('text/plain');
+	//res.type('application/json');
+	//res.type('application/xml');
+	res.send(400, 'Nothing here')
+	
 });
 
 app.post('/employees', addEmployee);
 app.get('/employees', findAll);
-//app.put('/employees', updateAll);//501
-//app.delete('/employees', deleteAll);
-
-//app.post('/employees/:id', error);
+app.put('/employees', function(){res.send(501)});//updateAll - 501 Not Implemented
+app.delete('/employees', function(){res.send(501)});//deleteAll - 501 Not Implemented
+app.post('/employees/:id', function(){res.send(405)});//405 Method Not Allowed
 app.get('/employees/:id', findById);
 app.put('/employees/:id', updateEmployee);
 app.delete('/employees/:id', deleteEmployee);
@@ -36,7 +42,7 @@ function addEmployee(req, res){
 	var employee = req.body;
 	console.log('Adding employee: ' + JSON.stringify(employee));
 	employees.push(employee);
-	res.send('employee added');// TODO add error code
+	res.send(201, 'employee added');
 }
 
 function findAll(req, res){
@@ -51,7 +57,7 @@ function findById(req, res){
     if(elemPos >= 0){
     	res.json(employees[elemPos]);
     }else{
-    	res.send(404, 'File not found'); //TODO Put proper error code
+    	res.send(404, 'Employee not found'); //Or should be 204
     }
 }
 
@@ -62,7 +68,7 @@ function updateEmployee(req, res){
     	employees.splice(elemPos,1);
     	employees.push(employee);
     }else{
-    	res.send(404, 'File not found'); //TODO Put proper error code
+    	res.send(404, 'Employee not found'); //Or should be 204
     }
 }
 
@@ -72,8 +78,9 @@ function deleteEmployee(req, res){
     var elemPos = indexOfEmployee(id);
 	if(elemPos >= 0){
     	employees.splice(elemPos,1);
+    	res.send(204, 'Succesully deleted');
     }else{
-    	res.send(404, 'File not found'); //TODO Put proper error code
+    	res.send(404, 'Employee not found'); //Or should be 204
     }
 }
 
