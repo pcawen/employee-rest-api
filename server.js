@@ -13,12 +13,13 @@ var employees = [
 app.get('/', function(req, res){
 	//res.type('text/plain');
 	//res.send('There is nothing here!');
-	res.redirect('/employees');
+	res.send(404, 'File not found')
+	//res.redirect('/employees');
 });
 
 app.post('/employees', addEmployee);
 app.get('/employees', findAll);
-//app.put('/employees', updateAll);
+//app.put('/employees', updateAll);//501
 //app.delete('/employees', deleteAll);
 
 //app.post('/employees/:id', error);
@@ -35,7 +36,7 @@ function addEmployee(req, res){
 	var employee = req.body;
 	console.log('Adding employee: ' + JSON.stringify(employee));
 	employees.push(employee);
-	res.send('employee added');
+	res.send('employee added');// TODO add error code
 }
 
 function findAll(req, res){
@@ -46,34 +47,37 @@ function findAll(req, res){
 function findById(req, res){
 	var id = req.params.id;
     console.log('Retrieving employee: ' + id);
-    /*for(var i = 0; i < employees.length; i++){
-    	if(employees[i].id == id){
-    		res.json(employees[i]);
-    	}
-    }*/
-    var elemPos = findById(id);
+    var elemPos = indexOfEmployee(id);
     if(elemPos >= 0){
-    	res.json(employees[i]);
+    	res.json(employees[elemPos]);
     }else{
-    	//error
+    	res.send(404, 'File not found'); //TODO Put proper error code
     }
 }
 
 function updateEmployee(req, res){
-	//if exist update, if not error
+	var id = req.params.id;
+	var elemPos = indexOfEmployee(id);
+	if(elemPos >= 0){
+    	employees.splice(elemPos,1);
+    	employees.push(employee);
+    }else{
+    	res.send(404, 'File not found'); //TODO Put proper error code
+    }
 }
 
 function deleteEmployee(req, res){
 	var id = req.params.id;
     console.log('Deleting employee: ' + id);
-    for(var i = 0; i < employees.length; i++){
-    	if(employees[i].id == id){
-    		employees.splice(i,1);
-    	}
+    var elemPos = indexOfEmployee(id);
+	if(elemPos >= 0){
+    	employees.splice(elemPos,1);
+    }else{
+    	res.send(404, 'File not found'); //TODO Put proper error code
     }
 }
 
-function findById(id){
+function indexOfEmployee(id){
 	for(var i = 0; i < employees.length; i++){
     	if(employees[i].id == id){
     		return i;
