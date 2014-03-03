@@ -1,9 +1,22 @@
 var express = require('express');
+//var js2xmlparser = require("js2xmlparser");
+var xml2js = require('xml2js');
+var parser = new xml2js.Parser({explicitArray: false, explicitRoot: false});
+//var parseString = require('xml2js').parseString;
 var app = express();
 
-app.use(express.bodyParser());
+app.use(function(req, res, next) {
+    var data = '';
+    req.setEncoding('utf8');
+    req.on('data', function(chunk) { 
+        data += chunk;
+    });
+    req.on('end', function() {
+        req.rawBody = data;
+        next();
+    });
+});
 
-//var employees = new Array();
 var employees = [
 	{id: 1, name: 'Alice', salary: 1500},
 	{id: 2, name: 'Bob', salary: 2000},
@@ -11,12 +24,7 @@ var employees = [
 ];
 
 app.get('/', function(req, res){
-	//res.type('text/plain');
-	//res.send('There is nothing here!');
 	//res.redirect('/employees');
-	console.log(req.header('Accept'));
-	console.log(req.header('Content-Type'));
-	//in response set Content-Type
 	res.type('text/plain');
 	//res.type('application/json');
 	//res.type('application/xml');
@@ -39,23 +47,54 @@ console.log('Listening on port 3001');
 function addEmployee(req, res){
 	console.log("req: " + req.body);
 	console.log("body: " + req);
-	var employee = req.body;
-	console.log('Adding employee: ' + JSON.stringify(employee));
-	employees.push(employee);
-	res.send(201, 'employee added');
+	var conttyp = req.header('Content-Type');
+	console.log('content-type' + conttyp);
+	if(conttyp == 'application/json'){
+		var employee = JSON.parse(req.rawBody);
+		console.log('Adding employee: ' + JSON.stringify(employee));
+		employees.push(employee);
+		res.send(201, 'employee added');
+	}else{
+		var xmlemployee = req.rawBody;
+		console.log('Adding employee: ' + xmlemployee);
+		parser.parseString(xmlemployee, function (err, result) {
+		    employees.push(result);
+		});
+		res.send(201, 'employee added');
+	}
 }
 
 function findAll(req, res){
 	console.log('Retrieving all employees');
-	res.json(employees);
+	var accept = req.header('Accept');
+	if(accept == 'json'){
+		console.log('returning json');
+		res.json(employees);
+	}else if(accept == 'xml'){
+		console.log('returning xml');
+		var builder = new xml2js.Builder({rootName: 'employees'});
+		var xml = builder.buildObject(employees);
+		res.send(xml);
+	}else{
+		res.send(406);//Not Acceptable. Only capable of generating content not acceptable according to the Accept headers
+	}
 }
 
 function findById(req, res){
 	var id = req.params.id;
+	var accept = req.header('Accept');
     console.log('Retrieving employee: ' + id);
     var elemPos = indexOfEmployee(id);
     if(elemPos >= 0){
-    	res.json(employees[elemPos]);
+    	if(accept == 'json'){
+    		res.json(employees[elemPos]);
+    	}else if(accept == 'xml'){
+			var builder = new xml2js.Builder({rootName: 'employee'});
+			var xml = builder.buildObject(employees[elemPos]);
+			res.send(xml);
+    	}else{
+			res.send(406);//Not Acceptable. Only capable of generating content not acceptable according to the Accept headers
+		}
     }else{
     	res.send(404, 'Employee not found'); //Or should be 204
     }
@@ -63,13 +102,27 @@ function findById(req, res){
 
 function updateEmployee(req, res){
 	var id = req.params.id;
+	var employee = null;
+	var conttyp = req.header('Content-Type');
+	console.log('Updting employee: ' + id);
 	var elemPos = indexOfEmployee(id);
+	if(conttyp == 'application/json'){
+		employee = JSON.parse(req.rawBody);
+	}else{
+		var xmlemployee = req.rawBody;
+		parser.parseString(xmlemployee, function (err, result) {
+		    employee = result;
+		});
+	}
 	if(elemPos >= 0){
+		console.log('Updating employee' + employee);
     	employees.splice(elemPos,1);
     	employees.push(employee);
+    	res.send(201, 'employee updated');
     }else{
     	res.send(404, 'Employee not found'); //Or should be 204
     }
+	
 }
 
 function deleteEmployee(req, res){
@@ -92,9 +145,3 @@ function indexOfEmployee(id){
     }
     return -1;
 }
-
-//function Employee(id, name, salary){
-//}
-
-
-//HTTP accept y content-type: json, xml
