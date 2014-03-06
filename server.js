@@ -1,10 +1,9 @@
 var express = require('express');
-//var js2xmlparser = require("js2xmlparser");
 var xml2js = require('xml2js');
 var parser = new xml2js.Parser({explicitArray: false, explicitRoot: false});
-//var parseString = require('xml2js').parseString;
 var app = express();
 
+//instead of use bodyParser(Read raw data). Needed to read xml format
 app.use(function(req, res, next) {
     var data = '';
     req.setEncoding('utf8');
@@ -41,8 +40,8 @@ app.get('/employees/:id', findById);
 app.put('/employees/:id', updateEmployee);
 app.delete('/employees/:id', deleteEmployee);
 
-app.listen(3001);
-console.log('Listening on port 3001');
+app.listen(3000);
+console.log('Listening on port 3000');
 
 function addEmployee(req, res){
 	console.log("req: " + req.body);
