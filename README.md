@@ -1,11 +1,11 @@
 employee-rest-api
 =================
 
-A simple REST api using nodejs and express
+##A simple REST api using nodejs and express
 
 
 To test it, you can use CURL or a Chrome plugin like "REST Console" or POSTMAN
-
+```
 -LIST
 http://localhost:3000/employees/
 GET
@@ -47,3 +47,4 @@ Content-Type: application/json
 --DELETE
 http://localhost:3000/employees/2
 DELETE
+```
